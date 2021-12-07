@@ -509,6 +509,156 @@ summary(lm(selected_data$latestPrice~selected_data$Sale_Estimate,selected_data))
 #
 #
 #
+#
+#
+#create an estimate tool off of the sample area
+#load the sample area 
+d78617<-read.csv('selected.csv')
+selected<-read.csv('selected.csv')
+
+
+#extract the correlation data from the features in the sample
+liv<-lm(latestPrice~livingAreaSqFt,d78617)
+liv<-as.numeric(liv$coefficients)
+liv_int<-liv[1]
+liv_cor<-liv[2]
+
+bth<-lm(latestPrice~numOfBathrooms,d78617)
+bth<-as.numeric(bth$coefficients)
+bth_int<-bth[1]
+bth_cor<-bth[2]
+
+bed<-lm(latestPrice~numOfBedrooms,d78617)
+bed<-as.numeric(bed$coefficients)
+bed_int<-bed[1]
+bed_cor<-bed[2]
+
+gar<-lm(latestPrice~garageSpaces,d78617)
+gar<-as.numeric(gar$coefficients)
+gar_int<-gar[1]
+gar_cor<-gar[2]
+
+par<-lm(latestPrice~parkingSpaces,d78617)
+par<-as.numeric(par$coefficients)
+par_int<-par[1]
+par_cor<-par[2]
+
+yer<-lm(latestPrice~yearBuilt,d78617)
+yer<-as.numeric(yer$coefficients)
+yer_int<-yer[1]
+yer_cor<-yer[2]
+
+lsm<-lm(latestPrice~latest_salemonth,d78617)
+lsm<-as.numeric(lsm$coefficients)
+lsm_int<-lsm[1]
+lsm_cor<-lsm[2]
+
+lsy<-lm(latestPrice~latest_saleyear,d78617)
+lsy<-as.numeric(lsy$coefficients)
+lsy_int<-lsy[1]
+lsy_cor<-lsy[2]
+
+pho<-lm(latestPrice~numOfPhotos,d78617)
+pho<-as.numeric(pho$coefficients)
+pho_int<-pho[1]
+pho_cor<-pho[2]
+
+noa<-lm(latestPrice~numOfAppliances,d78617)
+noa<-as.numeric(noa$coefficients)
+noa_int<-noa[1]
+noa_cor<-noa[2]
+
+npf<-lm(latestPrice~numOfParkingFeatures,d78617)
+npf<-as.numeric(npf$coefficients)
+npf_int<-npf[1]
+npf_cor<-npf[2]
+
+pat<-lm(latestPrice~numOfPatioAndPorchFeatures,d78617)
+pat<-as.numeric(pat$coefficients)
+pat_int<-pat[1]
+pat_cor<-pat[2]
+
+sec<-lm(latestPrice~numOfSecurityFeatures,d78617)
+sec<-as.numeric(sec$coefficients)
+sec_int<-sec[1]
+sec_cor<-sec[2]
+
+nwf<-lm(latestPrice~numOfWindowFeatures,d78617)
+nwf<-as.numeric(nwf$coefficients)
+nwf_int<-nwf[1]
+nwf_cor<-nwf[2]
+
+lot<-lm(latestPrice~lotSizeSqFt,d78617)
+lot<-as.numeric(lot$coefficients)
+lot_int<-lot[1]
+lot_cor<-lot[2]
+
+dis<-lm(latestPrice~avgSchoolDistance,d78617)
+dis<-as.numeric(dis$coefficients)
+dis_int<-dis[1]
+dis_cor<-dis[2]
+
+
+sto<-lm(latestPrice~numOfStories,d78617)
+sto<-as.numeric(sto$coefficients)
+sto_int<-sto[1]
+sto_cor<-sto[2]
+
+
+#use the correlations to create an average price estimate
+estimate<-selected%>%
+  mutate(Sale_p_bed1=(bed_int+(bed_cor*numOfBedrooms)))%>%
+  mutate(Sale_p_bath1=(bth_int+(bth_cor*numOfBathrooms)))%>%
+  mutate(Sale_p_sqft1=(liv_int+(liv_cor*livingAreaSqFt)))%>%
+  mutate(Sale_p_gar=(gar_int+(gar_cor*garageSpaces)))%>%
+  mutate(Sale_p_par=(par_int+(par_cor*parkingSpaces)))%>%
+  mutate(Sale_p_yer=(yer_int+(yer_cor*yearBuilt)))%>%
+  mutate(Sale_p_lsm=(lsm_int+(lsm_cor*latest_salemonth)))%>%
+  mutate(Sale_p_lsy=(lsy_int+(lsy_cor*latest_saleyear)))%>%
+  mutate(Sale_p_pho=(pho_int+(pho_cor*numOfPhotos)))%>%
+  mutate(Sale_p_noa=(noa_int+(noa_cor*numOfAppliances)))%>%
+  mutate(Sale_p_npf=(npf_int+(npf_cor*numOfParkingFeatures)))%>%
+  mutate(Sale_p_pat=(pat_int+(pat_cor*numOfPatioAndPorchFeatures)))%>%
+  mutate(Sale_p_sec=(sec_int+(sec_cor*numOfSecurityFeatures)))%>%
+  mutate(Sale_p_nwf=(nwf_int+(nwf_cor*numOfWindowFeatures)))%>%
+  mutate(Sale_p_lot=(lot_int+(lot_cor*lotSizeSqFt)))%>%
+  mutate(Sale_p_dis=(dis_int+(dis_cor*avgSchoolDistance)))%>%
+  mutate(Sale_p_sto=(sto_int+(sto_cor*numOfStories)))%>%
+  mutate(average_price=((Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                           Sale_p_par+Sale_p_yer+Sale_p_lsm+Sale_p_lsy+
+                           Sale_p_pho+Sale_p_noa+Sale_p_npf+Sale_p_pat+
+                           Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_dis+
+                           Sale_p_sto)/17))
+
+#use the linear model with the average price estimate to extract correlation data
+model<-lm(estimate$latestPrice~estimate$average_price+I(livingAreaSqFt^3)+I(lotSizeSqFt^3),estimate)
+model<-as.numeric(model$coefficients)
+mod_int<-model[1]
+pri_cor<-model[2]
+las_cor<-model[3]
+lss_cor<-model[4]
+
+#use the correlations from the linear model to estimate a sale price
+selected_data<-estimate%>%
+  mutate(Sale_Estimate=mod_int+(pri_cor*estimate$average_price)+(las_cor*(estimate$livingAreaSqFt^3))+lss_cor*(estimate$lotSizeSqFt^3))%>%
+  mutate(Address=selected$streetAddress)%>%
+  select(Address,numOfBedrooms,numOfBathrooms,livingAreaSqFt,lotSizeSqFt,latestPrice,latest_saleyear,average_price,Sale_Estimate)
+
+#print your estimate table
+print(selected_data%>%
+        select(Address,Sale_Estimate,latestPrice,numOfBedrooms,numOfBathrooms,livingAreaSqFt,lotSizeSqFt,latest_saleyear))
+#visualize your estimates against the last price
+graph<-selected_data%>%
+  select(Sale_Estimate,latestPrice,Address)%>%
+  gather("Value", "Price", -Address)
+
+ggplot(graph, aes(x =Address, y = Price, fill = Value)) +
+  geom_col(position = "dodge")+scale_x_discrete(labels=NULL)+xlab('Home')
+#summarize your analysis
+summary(lm(selected_data$latestPrice~selected_data$Sale_Estimate,selected_data))
+#
+#
+#
 #Find the average costs for a home in the selected area with features you specify 
 #based off of correlation and linear regression
 #allow user input of features
