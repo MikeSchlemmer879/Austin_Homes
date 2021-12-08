@@ -257,14 +257,165 @@ sto<-as.numeric(sto$coefficients)
 sto_int<-sto[1]
 sto_cor<-sto[2]
 
+#
+#
+#
+#
+#For the average variables of homes in the area, where can we expect to see
+#the price of homes to be over the next decade?
 
+selected<-austin_data
+selected<-selected%>%
+  mutate(Sale_p_bed1=(bed_int+(bed_cor*numOfBedrooms)))%>%
+  mutate(Sale_p_bath1=(bth_int+(bth_cor*numOfBathrooms)))%>%
+  mutate(Sale_p_sqft1=(liv_int+(liv_cor*livingAreaSqFt)))%>%
+  mutate(Sale_p_zip=(zip_int+(zip_cor*zipcode)))%>%
+  mutate(Sale_p_tax=(tax_int+(tax_cor*propertyTaxRate)))%>%
+  mutate(Sale_p_gar=(gar_int+(gar_cor*garageSpaces)))%>%
+  mutate(Sale_p_par=(par_int+(par_cor*parkingSpaces)))%>%
+  mutate(Sale_p_yer=(yer_int+(yer_cor*yearBuilt)))%>%
+  mutate(Sale_p_lsm=(lsm_int+(lsm_cor*latest_salemonth)))%>%
+  mutate(Sale_p_lsy=(lsy_int+(lsy_cor*latest_saleyear)))%>%
+  mutate(Sale_p_pho=(pho_int+(pho_cor*numOfPhotos)))%>%
+  mutate(Sale_p_acc=(acc_int+(acc_cor*numOfAccessibilityFeatures)))%>%
+  mutate(Sale_p_noa=(noa_int+(noa_cor*numOfAppliances)))%>%
+  mutate(Sale_p_npf=(npf_int+(npf_cor*numOfParkingFeatures)))%>%
+  mutate(Sale_p_pat=(pat_int+(pat_cor*numOfPatioAndPorchFeatures)))%>%
+  mutate(Sale_p_sec=(sec_int+(sec_cor*numOfSecurityFeatures)))%>%
+  mutate(Sale_p_now=(now_int+(now_cor*numOfWaterfrontFeatures)))%>%
+  mutate(Sale_p_nwf=(nwf_int+(nwf_cor*numOfWindowFeatures)))%>%
+  mutate(Sale_p_lot=(lot_int+(lot_cor*lotSizeSqFt)))%>%
+  mutate(Sale_p_pri=(pri_int+(pri_cor*numOfPrimarySchools)))%>%
+  mutate(Sale_p_ele=(ele_int+(ele_cor*numOfElementarySchools)))%>%
+  mutate(Sale_p_mid=(mid_int+(mid_cor*numOfMiddleSchools)))%>%
+  mutate(Sale_p_nhi=(nhi_int+(nhi_cor*numOfHighSchools)))%>%
+  mutate(Sale_p_dis=(dis_int+(dis_cor*avgSchoolDistance)))%>%
+  mutate(Sale_p_rat=(rat_int+(rat_cor*avgSchoolRating)))%>%
+  mutate(Sale_p_siz=(siz_int+(siz_cor*avgSchoolSize)))%>%
+  mutate(Sale_p_stu=(stu_int+(stu_cor*MedianStudentsPerTeacher)))%>%
+  mutate(Sale_p_sto=(sto_int+(sto_cor*numOfStories)))%>%
+  mutate(average_price=((Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_zip+
+                           Sale_p_tax+Sale_p_gar+Sale_p_par+Sale_p_yer+
+                           Sale_p_lsm+Sale_p_lsy+Sale_p_pho+Sale_p_acc+
+                           Sale_p_noa+Sale_p_npf+Sale_p_pat+Sale_p_sec+
+                           Sale_p_now+Sale_p_nwf+Sale_p_lot+Sale_p_pri+
+                           Sale_p_ele+Sale_p_mid+Sale_p_nhi+Sale_p_dis+
+                           Sale_p_rat+Sale_p_siz+Sale_p_stu+Sale_p_sto)/28))
+
+model<-lm(selected$latestPrice~selected$average_price+I(livingAreaSqFt^3)+I(lotSizeSqFt^3),selected)
+model<-as.numeric(model$coefficients)
+mod_int<-model[1]
+pri_cor<-model[2]
+las_cor<-model[3]
+lss_cor<-model[4]
+
+selected_data<-selected%>%
+  mutate(Sale_Estimate=mod_int+(pri_cor*selected$average_price)+(las_cor*(selected$livingAreaSqFt^3))+lss_cor*(selected$lotSizeSqFt^3))%>%
+  select(numOfBedrooms,numOfBathrooms,livingAreaSqFt,lotSizeSqFt,latestPrice,latest_saleyear,average_price,Sale_Estimate)
+
+homes_avg<-as.data.frame(mean(austin_data$numOfBedrooms))%>%
+  mutate(ave_bth=mean(austin_data$numOfBathrooms))%>%
+  mutate(ave_sqf=mean(austin_data$livingAreaSqFt))%>%
+  mutate(ave_grg=mean(austin_data$garageSpaces))%>%
+  mutate(ave_par=mean(austin_data$parkingSpaces))%>%
+  mutate(ave_yer=mean(austin_data$yearBuilt))%>%
+  mutate(ave_noa=mean(austin_data$numOfAppliances))%>%
+  mutate(ave_npf=mean(austin_data$numOfParkingFeatures))%>%
+  mutate(ave_pat=mean(austin_data$numOfPatioAndPorchFeatures))%>%
+  mutate(ave_sec=mean(austin_data$numOfSecurityFeatures))%>%
+  mutate(ave_nwf=mean(austin_data$numOfWindowFeatures))%>%
+  mutate(ave_lot=mean(austin_data$lotSizeSqFt))%>%
+  mutate(ave_sto=mean(austin_data$numOfStories))%>%
+  mutate(Sale_p_bed1=(bed_int+(bed_cor*`mean(austin_data$numOfBedrooms)`)))%>%
+  mutate(Sale_p_bath1=(bth_int+(bth_cor*ave_bth)))%>%
+  mutate(Sale_p_sqft1=(liv_int+(liv_cor*ave_sqf)))%>%
+  mutate(Sale_p_gar=(gar_int+(gar_cor*ave_grg)))%>%
+  mutate(Sale_p_par=(par_int+(par_cor*ave_par)))%>%
+  mutate(Sale_p_yer=(yer_int+(yer_cor*ave_yer)))%>%
+  mutate(Sale_p_noa=(noa_int+(noa_cor*ave_noa)))%>%
+  mutate(Sale_p_npf=(npf_int+(npf_cor*ave_npf)))%>%
+  mutate(Sale_p_pat=(pat_int+(pat_cor*ave_pat)))%>%
+  mutate(Sale_p_sec=(sec_int+(sec_cor*ave_sec)))%>%
+  mutate(Sale_p_nwf=(nwf_int+(nwf_cor*ave_nwf)))%>%
+  mutate(Sale_p_lot=(lot_int+(lot_cor*ave_lot)))%>%
+  mutate(Sale_p_sto=(sto_int+(sto_cor*ave_sto)))%>%
+  mutate(Sale_p_2021=(lsy_int+(lsy_cor*2021)))%>%
+  mutate(Sale_p_2022=(lsy_int+(lsy_cor*2022)))%>%
+  mutate(Sale_p_2023=(lsy_int+(lsy_cor*2023)))%>%
+  mutate(Sale_p_2024=(lsy_int+(lsy_cor*2024)))%>%
+  mutate(Sale_p_2025=(lsy_int+(lsy_cor*2025)))%>%
+  mutate(Sale_p_2026=(lsy_int+(lsy_cor*2026)))%>%
+  mutate(Sale_p_2027=(lsy_int+(lsy_cor*2027)))%>%
+  mutate(Sale_p_2028=(lsy_int+(lsy_cor*2028)))%>%
+  mutate(Sale_p_2029=(lsy_int+(lsy_cor*2029)))%>%
+  mutate(Sale_p_2030=(lsy_int+(lsy_cor*2030)))%>%
+  mutate(Sale_p_2031=(lsy_int+(lsy_cor*2031)))%>%
+  mutate(average_price=((Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                           Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                           Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/13))%>%
+  mutate(average_price_2021=((Sale_p_2021+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2022=((Sale_p_2022+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2023=((Sale_p_2023+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2024=((Sale_p_2024+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2025=((Sale_p_2025+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2026=((Sale_p_2026+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2027=((Sale_p_2027+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2028=((Sale_p_2028+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2029=((Sale_p_2029+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2030=((Sale_p_2030+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))%>%
+  mutate(average_price_2031=((Sale_p_2031+Sale_p_sqft1+Sale_p_bed1+Sale_p_bath1+Sale_p_gar+
+                                Sale_p_par+Sale_p_yer+Sale_p_noa+Sale_p_npf+
+                                Sale_p_pat+Sale_p_sec+Sale_p_nwf+Sale_p_lot+Sale_p_sto)/14))
+
+#plot the estimated sale price for an average home in the Austin area over the next decade
+graph<-c(homes_avg[,38:49])
+years<-c(2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2030,2031)
+graph<-as.data.frame(cbind(graph))%>%
+  cbind(years)
+graph<-graph%>%
+  mutate(est_sale_price=graph)%>%
+  select(years,est_sale_price)
+
+graph<-graph%>%
+  mutate(est_price=as.integer(graph$est_sale_price))%>%
+  select(years,est_price)
+
+graph%>%
+  ggplot(aes(years,est_price))+geom_line(color='red',size=3)+geom_point(size=3)+
+  ggtitle('Projected Sale Price of Average Austin,TX Home')+
+  ylab('Estimated Sale Price in Dollars')+xlab('Year')
+#
+#
+#
+#
+#
 ##
 #
 #run an average home cost for homes in selected sub area
 
 selected<-read.csv('selected.csv')
 selected<-selected%>%
-  select(-zpid,-numOfCommunityFeatures)%>%
+  #select(-zpid,-numOfCommunityFeatures)%>%
   mutate(Sale_p_bed1=(bed_int+(bed_cor*numOfBedrooms)))%>%
   mutate(Sale_p_bath1=(bth_int+(bth_cor*numOfBathrooms)))%>%
   mutate(Sale_p_sqft1=(liv_int+(liv_cor*livingAreaSqFt)))%>%
@@ -300,8 +451,6 @@ selected<-selected%>%
                            Sale_p_now+Sale_p_nwf+Sale_p_lot+Sale_p_pri+
                            Sale_p_ele+Sale_p_mid+Sale_p_nhi+Sale_p_dis+
                            Sale_p_rat+Sale_p_siz+Sale_p_stu+Sale_p_sto)/28))#%>%
-  #select(numOfBedrooms,numOfBathrooms,livingAreaSqFt,latestPrice,latest_saleyear,average_price,lotSizeSqFt)
-#print(selected)
 
 model<-lm(selected$latestPrice~selected$average_price+I(livingAreaSqFt^3)+I(lotSizeSqFt^3),selected)
 model<-as.numeric(model$coefficients)
@@ -324,6 +473,12 @@ graph<-selected_data%>%
 ggplot(graph, aes(x =Address, y = Price, fill = Value)) +
   geom_col(position = "dodge")+scale_x_discrete(labels=NULL)+xlab('Home')
 summary(lm(selected_data$latestPrice~selected_data$Sale_Estimate,selected_data))
+#
+#
+#
+#
+#
+#
 #
 #
 #
@@ -677,7 +832,7 @@ Sale_p_sqft<-(liv_int+(liv_cor*Sqft))
 estimate<-as.integer((Sale_p_sqft+Sale_p_bed+Sale_p_bath)/3)
 print(selected_data%>%
         select(Address,Sale_Estimate,latestPrice,numOfBedrooms,numOfBathrooms,livingAreaSqFt,lotSizeSqFt,latest_saleyear))
-paste("The average price for property with those features in zipcode ",area ," is $",estimate,sep="")
+paste("The average price for property with those features is $",estimate,sep="")
 ggplot(d78617,aes(livingAreaSqFt,latestPrice))+geom_point(alpha=0.05)+xlim(1,4000)+ylim(1,1000000)+geom_smooth(method='lm',color='red')
 ggplot(d78617,aes(numOfBathrooms,latestPrice))+geom_point(alpha=0.05)+xlim(0,5)+ylim(1,1000000)+geom_smooth(method='lm',color='red')
 ggplot(d78617,aes(numOfBedrooms,latestPrice))+geom_point(alpha=0.05)+xlim(0,5)+ylim(1,1000000)+geom_smooth(method='lm',color='red')
