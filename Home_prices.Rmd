@@ -1,3 +1,16 @@
+---
+title: "BSDS100"
+author: "Schlemmer"
+date: "12/15/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+First I load my packages and a correlation matrix function
+
+```{R}
 library(tidyverse)
 #install.packages('reshape2')
 library(reshape2)
@@ -75,6 +88,11 @@ correlation_matrix <- function(df,
   
   return(Rnew)
 }
+```
+
+Here I use a linear model to show a projection of where the average home sale price will be over the next 10 years.  Based on the average features and sale price of all home sales in the Austin area in the dataset.
+
+```{R}
 
 #impport dataset
 austin<-read.csv('austinHousingData.csv')
@@ -405,27 +423,18 @@ graph%>%
   ggtitle('Projected Sale Price of Average Austin,TX Home')+
   ylab('Estimated Sale Price in Dollars')+xlab('Year')
 #
-#
-####
-###
-###
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-##
-#
-#run an average home cost for homes in selected sub area
+```
 
+I used an outside web app that I made using Esri's ArcGIS Online software to 
+select a portion of the dataset based on the geographic location of the points.
+The same app then exported the subset of the data to .csv.
+
+https://ace-solutions.maps.arcgis.com/apps/webappviewer/
+index.html?id=8ff621447c15483a9aa319a84843d285
+
+Here is the link, I think you may need an account to actually use the tool.
+
+```{R}
 selected<-read.csv('selected.csv')
 austin<-read.csv('selected.csv')
 #get correlation to latest price data
@@ -695,26 +704,20 @@ ggplot(graph, aes(x =Address, y = Price, fill = Value)) +
   geom_col(position = "dodge")+scale_x_discrete(labels=NULL)+xlab('Home')
 summary(lm(selected_data$latestPrice~selected_data$Sale_Estimate,selected_data))
 
+```
+You can view the estimated prices from the model for a home with the features
+of those listed, and compare the model with the real latest sale prices. The
+adjusted R-squared is a 0.93 which is fairly accurate.
 
+There is also some lines that predict the projected sale price of the home
+I wasn't able to get them accurate enough for my liking in time so I left them 
+out of the data frame with the column selection.
 
+Next I decided to use just the data from the zipcode of the subsetted data. I 
+grab the zipcode from the subset and pull just the data from the austin area in
+that zipcode to run the model
 
-
-
-
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
+```{R}
 #
 #
 #create an estimate tool off of a specific zipcode
@@ -921,12 +924,14 @@ ggplot(graph, aes(x =Address, y = Price, fill = Value)) +
   geom_col(position = "dodge")+scale_x_discrete(labels=NULL)+xlab('Home')
 #summarize your analysis
 summary(lm(selected_data$latestPrice~selected_data$Sale_Estimate,selected_data))
-#
-#
-#
-#
-#
-#
+
+
+
+```
+Here you can see the R-squared get a bit closer to 1, and you can view the model
+against the sale price data
+
+```{R}
 #create an estimate tool off of the sample area
 #load the sample area 
 d78617<-read.csv('selected.csv')
@@ -1073,8 +1078,17 @@ ggplot(graph, aes(x =Address, y = Price, fill = Value)) +
 #summarize your analysis
 summary(lm(selected_data$latestPrice~selected_data$Sale_Estimate,selected_data))
 #
-#
-#
+
+```
+
+Here we lost a bit of the R-squared value. 
+
+You can use some inputs to run the model for a home you may be interested in.
+Supplying it with the number of bed and bathrooms as well as the square footage
+will give you a rough estimate as to what others in the Austin area have paid
+for similar features.
+
+```{R}
 #Find the average costs for a home in the selected area with features you specify 
 #based off of correlation and linear regression
 #allow user input of features
@@ -1093,7 +1107,34 @@ Sale_p_sqft<-(liv_int+(liv_cor*Sqft))
 estimate<-as.integer((Sale_p_sqft+Sale_p_bed+Sale_p_bath)/3)
 print(selected_data%>%
         select(Address,Sale_Estimate,latestPrice,numOfBedrooms,numOfBathrooms,livingAreaSqFt,lotSizeSqFt,latest_saleyear))
-paste("The average price for property with those features is $",estimate,sep="")
+
 ggplot(d78617,aes(livingAreaSqFt,latestPrice))+geom_point(alpha=0.05)+xlim(1,4000)+ylim(1,1000000)+geom_smooth(method='lm',color='red')
 ggplot(d78617,aes(numOfBathrooms,latestPrice))+geom_point(alpha=0.05)+xlim(0,5)+ylim(1,1000000)+geom_smooth(method='lm',color='red')
 ggplot(d78617,aes(numOfBedrooms,latestPrice))+geom_point(alpha=0.05)+xlim(0,5)+ylim(1,1000000)+geom_smooth(method='lm',color='red')
+
+paste("The average price for property with those features is $",estimate,sep="")
+```
+Here, as well as an estimate for the features you input, you can see the model's
+projection for prices with features in the visualizations of the linear model.
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
